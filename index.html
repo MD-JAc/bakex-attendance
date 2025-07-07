@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAKEX Since 1997</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+
+<!-- Login Page -->
+<div id="loginPage" class="flex items-center justify-center h-screen">
+  <div class="bg-white shadow-xl rounded-lg p-6 w-80 animate-fade-in">
+    <h1 class="text-3xl font-bold text-center mb-4 text-yellow-700">BAKEX Since 1997</h1>
+    <input id="loginUser" type="text" placeholder="Username" class="border p-2 w-full mb-2 rounded shadow-sm">
+    <input id="loginPass" type="password" placeholder="Password" class="border p-2 w-full mb-4 rounded shadow-sm">
+    <button onclick="login()" class="bg-yellow-600 hover:bg-yellow-500 text-white w-full py-2 rounded shadow">Login</button>
+  </div>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" class="hidden h-screen flex overflow-hidden">
+  <!-- Sidebar -->
+  <div id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-md transform -translate-x-full transition-transform duration-300 md:translate-x-0 md:relative">
+    <div class="p-4 border-b text-yellow-700 font-bold text-lg">BAKEX Since 1997</div>
+    <ul class="p-4 space-y-2">
+      <li><button id="navEmployees" onclick="showSection('employees')" class="w-full text-left px-4 py-2 hover:bg-yellow-50 rounded shadow-sm">Employees</button></li>
+      <li><button id="navAttendance" onclick="showSection('attendance')" class="w-full text-left px-4 py-2 hover:bg-yellow-50 rounded shadow-sm">Attendance</button></li>
+      <li><button id="navAnalytics" onclick="showSection('analytics')" class="w-full text-left px-4 py-2 hover:bg-yellow-50 rounded shadow-sm">Analytics</button></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="flex-1 flex flex-col overflow-y-auto relative">
+    <header class="flex items-center justify-between px-4 py-2 bg-white shadow md:hidden">
+      <button onclick="toggleSidebar()" class="text-yellow-700 text-2xl">☰</button>
+      <h1 class="text-lg font-bold text-yellow-700">BAKEX Dashboard</h1>
+    </header>
+
+    <main class="flex-1 p-6 space-y-6 overflow-y-auto">
+      <!-- Employees Section -->
+      <section id="employeesSection" class="hidden">
+        <h2 class="text-2xl font-semibold mb-4">Employees</h2>
+        <div class="flex gap-2 mb-4">
+          <input id="empName" placeholder="Name" class="border p-2 rounded flex-1 shadow-sm">
+          <input id="empPhone" placeholder="Phone" class="border p-2 rounded flex-1 shadow-sm">
+          <button onclick="addEmployee()" class="bg-yellow-600 text-white px-4 py-2 rounded shadow">Add</button>
+        </div>
+        <table class="min-w-full bg-white shadow rounded">
+          <thead class="bg-yellow-100">
+            <tr><th class="p-2">Name</th><th class="p-2">Phone</th></tr>
+          </thead>
+          <tbody id="employeeTable" class="text-center"></tbody>
+        </table>
+      </section>
+
+      <!-- Attendance Section -->
+      <section id="attendanceSection" class="hidden">
+        <h2 class="text-2xl font-semibold mb-4">Attendance</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label class="block">Date</label>
+            <input id="attDate" type="date" class="border p-2 rounded shadow-sm w-full">
+            <p id="attDay" class="text-sm text-gray-600 mt-1"></p>
+          </div>
+          <div>
+            <label class="block">Time (12-hour)</label>
+            <input id="attTime" type="time" class="border p-2 rounded shadow-sm w-full">
+          </div>
+        </div>
+        <input id="attDesc" placeholder="Description (optional)" class="border p-2 rounded mt-2 w-full shadow-sm">
+        <div class="flex gap-2 mt-2">
+          <button onclick="startSession()" class="bg-green-600 text-white px-4 py-2 rounded shadow">Start Session</button>
+          <button id="closeSessionBtn" onclick="closeSession()" class="bg-red-600 text-white px-4 py-2 rounded shadow hidden">Close Session</button>
+        </div>
+
+        <div id="attendeeList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-4"></div>
+
+        <h3 class="text-xl font-semibold mt-6">Attendance History</h3>
+        <div class="flex gap-2 mb-2">
+          <button onclick="sortHistory('asc')" class="bg-gray-200 px-2 py-1 rounded shadow-sm">Sort ↑</button>
+          <button onclick="sortHistory('desc')" class="bg-gray-200 px-2 py-1 rounded shadow-sm">Sort ↓</button>
+          <button onclick="exportHistoryPDF()" class="bg-green-600 text-white px-3 py-1 rounded shadow ml-2">Download PDF</button>
+          <button onclick="exportHistoryExcel()" class="bg-blue-600 text-white px-3 py-1 rounded shadow">Download Excel</button>
+        </div>
+        <table class="min-w-full bg-white shadow rounded mt-2">
+          <thead class="bg-yellow-100">
+            <tr><th>Date</th><th>Time</th><th>Description</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="historyTable" class="text-center"></tbody>
+        </table>
+      </section>
+
+      <!-- Analytics Section -->
+      <section id="analyticsSection" class="hidden">
+        <h2 class="text-2xl font-semibold mb-4">Monthly Analytics</h2>
+        <div class="mb-2">
+          <button onclick="exportAnalyticsPDF()" class="bg-green-600 text-white px-3 py-1 rounded shadow">Download PDF</button>
+          <button onclick="exportAnalyticsExcel()" class="bg-blue-600 text-white px-3 py-1 rounded shadow ml-2">Download Excel</button>
+        </div>
+        <table class="min-w-full bg-white shadow rounded">
+          <thead class="bg-yellow-100">
+            <tr><th>Name</th><th>Presents</th><th>Absents</th></tr>
+          </thead>
+          <tbody id="analyticsTable" class="text-center"></tbody>
+        </table>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Attendance View Modal -->
+<div id="viewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded shadow-lg max-w-lg w-full p-4 relative">
+    <button onclick="closeView()" class="absolute top-2 right-2 text-red-600 text-lg font-bold">✖️</button>
+    <h3 class="text-xl font-semibold mb-2">Attendance Details</h3>
+    <div id="viewModalContent" class="overflow-x-auto"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
